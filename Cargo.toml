@@ -1,0 +1,10 @@
+[package]
+name = "vimim"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cpal = "0.15.3"
+hound = "3.5.1"
+ncurses = "6.0.0"
+rand = "0.8.5"
