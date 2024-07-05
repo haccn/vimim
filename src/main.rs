@@ -1,3 +1,5 @@
+mod audioman;
+
 use rand::Rng;
 
 struct Vec2 {
@@ -6,7 +8,7 @@ struct Vec2 {
 }
 
 fn main() {
-	// todo: sound
+	let aman = audioman::AudioMan::new();
 
 	ncurses::initscr();
 	ncurses::start_color();
@@ -32,15 +34,31 @@ fn main() {
 		render(&player, &enemy, max_y, max_x);
 
 		let ch = ncurses::getch();
-		if ch == 'h' as i32 { player.x -= 1; }
-		else if ch == 'j' as i32 { player.y += 1; }
-		else if ch == 'k' as i32 { player.y -= 1; }
-		else if ch == 'l' as i32 { player.x += 1; }
+		if ch == 'h' as i32 {
+			player.x -= 1;
+			aman.play_rand_footstep();
+		}
+		else if ch == 'j' as i32 {
+			player.y += 1;
+			aman.play_rand_footstep();
+		}
+		else if ch == 'k' as i32 {
+			player.y -= 1;
+			aman.play_rand_footstep();
+		}
+		else if ch == 'l' as i32 {
+			player.x += 1;
+			aman.play_rand_footstep();
+		}
 		else if ch == 'x' as i32 {
 			if player.y == enemy.y && player.x == enemy.x {
+				aman.play(audioman::EXPLOSION_BYTES);
 				place_enemy(&mut rng, &mut enemy, max_y, max_x);
 			}
 		}
+
+		player.y = player.y.clamp(0, max_y - 1);
+		player.x = player.x.clamp(0, max_x - 1);
 	}
 }
 
