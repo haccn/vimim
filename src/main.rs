@@ -75,18 +75,18 @@ fn main() {
 					aman.play(audioman::WOOSH_BYTES);
 				}
 				else {
-					player.x = max_x - 1;
+					player.x = max_x;
 					aman.play(audioman::WOOSH_BYTES);
 				}
 				motion_buf.clear();
 			}
 			Char('G') => {
 				if motion_buf.is_empty() {
-					player.y = max_y - 1;
+					player.y = max_y;
 					aman.play(audioman::WOOSH_BYTES);
 				}
 				else if let Ok(y) = motion_buf.parse::<i32>() {
-					player.y = y - 1;
+					player.y = y;
 					aman.play(audioman::WOOSH_BYTES);
 				}
 				motion_buf.clear();
@@ -101,7 +101,7 @@ fn main() {
 							aman.play(audioman::WOOSH_BYTES);
 						}
 						else if let Ok(y) = motion_buf.parse::<i32>() {
-							player.y = y - 1;
+							player.y = y;
 							aman.play(audioman::WOOSH_BYTES);
 						}
 						motion_buf.clear();
@@ -142,25 +142,24 @@ fn main() {
 		(max_x_u16, max_y_u16) = termion::terminal_size().unwrap();
 		max_x = max_x_u16 as i32;
 		max_y = max_y_u16 as i32;
-		player.x = player.x.clamp(3, max_x - 1);
-		player.y = player.y.clamp(1, max_y - 1);
+		player.x = player.x.clamp(3, max_x);
+		player.y = player.y.clamp(1, max_y);
 	}
 }
 
 fn place_enemy(rng: &mut rand::rngs::ThreadRng, enemy: &mut Vec2, max_x: i32, max_y: i32) {
-	enemy.x = rng.gen_range(3..max_x - 1);
-	enemy.y = rng.gen_range(1..max_y - 1);
+	enemy.x = rng.gen_range(3..max_x);
+	enemy.y = rng.gen_range(1..max_y);
 }
 
 fn render(stdout: &mut std::io::StdoutLock, player: &Vec2, enemy: &Vec2, max_x: i32, max_y: i32, motion_buf: &String) {
-	// todo: add color to highlight current line
 	let mut numbers = String::new();
 	let mut i = 1;
 	while i <= max_y {
 		if i == player.y {
-			numbers.push_str(&termion::color::Bg(termion::color::Rgb(64, 64, 64)).to_string());
+			numbers.push_str(&termion::color::Bg(termion::color::Rgb(32, 32, 32)).to_string());
 			numbers.push_str(&termion::cursor::Goto(1, i as u16).to_string());
-			numbers.push_str(&i.to_string());
+			numbers.push_str(&format!("{: <1$}", i, max_x as usize));
 			numbers.push_str(&termion::color::Bg(termion::color::Black).to_string());
 		}
 		else {
