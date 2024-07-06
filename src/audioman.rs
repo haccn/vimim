@@ -9,6 +9,7 @@ static FOOTSTEPS: &'static [&'static [u8]] = &[
 	include_bytes!("../audio/footstep3.mp3"),
 ];
 static MUSIC_BYTES: &'static [u8] = include_bytes!("../audio/music.mp3");
+pub static WOOSH_BYTES: &'static [u8] = include_bytes!("../audio/woosh.mp3");
 
 pub struct AudioMan {
 	_stream: rodio::OutputStream,
@@ -24,7 +25,7 @@ impl AudioMan {
 		let reader = std::io::Cursor::new(MUSIC_BYTES);
 		let source = rodio::Decoder::new(reader).unwrap()
 			.repeat_infinite()
-			.amplify(0.2)
+			.amplify(0.5)
 			.convert_samples();
 		stream_handle.play_raw(source).unwrap();
 
@@ -38,6 +39,7 @@ impl AudioMan {
 	pub fn play(&self, audio_bytes: &'static [u8]) {
 		let reader = std::io::Cursor::new(audio_bytes);
 		let source = rodio::Decoder::new(reader).unwrap()
+			.speed(rand::thread_rng().gen_range(0.9..1.3))
 			.convert_samples();
 		self.stream_handle.play_raw(source).unwrap();
 	}
@@ -48,7 +50,8 @@ impl AudioMan {
 		}
 		let rand_idx = rand::thread_rng().gen_range(0..4);
 		let reader = std::io::Cursor::new(FOOTSTEPS[rand_idx]);
-		let source = rodio::Decoder::new(reader).unwrap();
+		let source = rodio::Decoder::new(reader).unwrap()
+			.speed(rand::thread_rng().gen_range(0.9..1.3));
 		self.footstep_track.append(source);
 	}
 }
