@@ -137,9 +137,11 @@ fn main() {
 						Enter => {
 							if motion_buf == ":q" {
 								stdout
+									.queue(terminal::Clear(terminal::ClearType::All)).unwrap()
 									.queue(terminal::LeaveAlternateScreen).unwrap()
 									.queue(cursor::RestorePosition).unwrap()
 									.flush().unwrap();
+								terminal::disable_raw_mode().unwrap();
 								std::process::exit(0);
 							}
 							motion_buf.clear();
