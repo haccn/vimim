@@ -16,6 +16,8 @@ fn main() {
 
 	terminal::enable_raw_mode().unwrap();
 	stdout
+		.queue(cursor::SavePosition).unwrap()
+		.queue(terminal::EnterAlternateScreen).unwrap()
 		.queue(cursor::SetCursorStyle::SteadyBlock).unwrap()
 		.flush().unwrap();
 
@@ -41,112 +43,112 @@ fn main() {
 		use crossterm::event::Event::*;
 		match crossterm::event::read().unwrap() {
 			Key(key_evt) => {
+				if key_evt.kind != crossterm::event::KeyEventKind::Release {
 				use crossterm::event::KeyCode::*;
-				match key_evt.code {
-					Char('h') => {
-						move_player(&mut motion_buf, -1, 0, &mut player, &aman);
-					}
-					Char('j') => {
-						move_player(&mut motion_buf, 0, 1, &mut player, &aman);
-					}
-					Char('k') => {
-						move_player(&mut motion_buf, 0, -1, &mut player, &aman);
-					}
-					Char('l') => {
-						move_player(&mut motion_buf, 1, 0, &mut player, &aman);
-					}
-					Char('0') => {
-						if motion_buf.is_empty() {
-							player.x = 0;
-							motion_buf.clear();
-							aman.play(audioman::WOOSH_BYTES);
+					match key_evt.code {
+						Char('h') => {
+							move_player(&mut motion_buf, -1, 0, &mut player, &aman);
 						}
-						else {
-							motion_buf.push('0');
+						Char('j') => {
+							move_player(&mut motion_buf, 0, 1, &mut player, &aman);
 						}
-					}
-					Char('^') => {
-						if player.y == enemy.y {
-							player.x = enemy.x;
-							aman.play(audioman::WOOSH_BYTES);
+						Char('k') => {
+							move_player(&mut motion_buf, 0, -1, &mut player, &aman);
 						}
-						else {
-							player.x = 0;
-							aman.play(audioman::WOOSH_BYTES);
+						Char('l') => {
+							move_player(&mut motion_buf, 1, 0, &mut player, &aman);
 						}
-						motion_buf.clear();
-					}
-					Char('$') => {
-						if player.y == enemy.y {
-							player.x = enemy.x;
-							aman.play(audioman::WOOSH_BYTES);
-						}
-						else {
-							player.x = max_x;
-							aman.play(audioman::WOOSH_BYTES);
-						}
-						motion_buf.clear();
-					}
-					Char('G') => {
-						if motion_buf.is_empty() {
-							player.y = max_y;
-							aman.play(audioman::WOOSH_BYTES);
-						}
-						else if let Ok(y) = motion_buf.parse::<i32>() {
-							player.y = y;
-							aman.play(audioman::WOOSH_BYTES);
-						}
-						motion_buf.clear();
-					}
-					Char('g') => {
-						let chars = motion_buf.chars();
-						if let Some(lastch) = chars.last() {
-							if lastch == 'g' {
-								motion_buf.pop();
-								if motion_buf.is_empty() {
-									player.y = 0;
-									aman.play(audioman::WOOSH_BYTES);
-								}
-								else if let Ok(y) = motion_buf.parse::<i32>() {
-									player.y = y;
-									aman.play(audioman::WOOSH_BYTES);
-								}
+						Char('0') => {
+							if motion_buf.is_empty() {
+								player.x = 0;
 								motion_buf.clear();
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							else {
+								motion_buf.push('0');
+							}
+						}
+						Char('^') => {
+							if player.y == enemy.y {
+								player.x = enemy.x;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							else {
+								player.x = 0;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							motion_buf.clear();
+						}
+						Char('$') => {
+							if player.y == enemy.y {
+								player.x = enemy.x;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							else {
+								player.x = max_x;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							motion_buf.clear();
+						}
+						Char('G') => {
+							if motion_buf.is_empty() {
+								player.y = max_y;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							else if let Ok(y) = motion_buf.parse::<i32>() {
+								player.y = y;
+								aman.play(audioman::WOOSH_BYTES);
+							}
+							motion_buf.clear();
+						}
+						Char('g') => {
+							let chars = motion_buf.chars();
+							if let Some(lastch) = chars.last() {
+								if lastch == 'g' {
+									motion_buf.pop();
+									if motion_buf.is_empty() {
+										player.y = 0;
+										aman.play(audioman::WOOSH_BYTES);
+									}
+									else if let Ok(y) = motion_buf.parse::<i32>() {
+										player.y = y;
+										aman.play(audioman::WOOSH_BYTES);
+									}
+									motion_buf.clear();
+								}
+								else {
+									motion_buf.push('g');
+								}
 							}
 							else {
 								motion_buf.push('g');
 							}
 						}
-						else {
-							motion_buf.push('g');
+						Char('x') => {
+							if player.x == enemy.x && player.y == enemy.y {
+								aman.play(audioman::EXPLOSION_BYTES);
+								place_enemy(&mut rng, &mut enemy, max_x, max_y);
+							}
+							motion_buf.clear();
 						}
-					}
-					Char('x') => {
-						if player.x == enemy.x && player.y == enemy.y {
-							aman.play(audioman::EXPLOSION_BYTES);
-							place_enemy(&mut rng, &mut enemy, max_x, max_y);
+						Char(ch) => {
+							motion_buf.push(ch);
 						}
-						motion_buf.clear();
-					}
-					Char(ch) => {
-						motion_buf.push(ch);
-					}
-					Enter => {
-						if motion_buf == ":q" {
-							// todo: return terminal to prev state (alt terminals?)
-							stdout
-								.queue(terminal::Clear(terminal::ClearType::All)).unwrap()
-								.flush().unwrap();
-							std::process::exit(0);
+						Enter => {
+							if motion_buf == ":q" {
+								stdout
+									.queue(terminal::LeaveAlternateScreen).unwrap()
+									.queue(cursor::RestorePosition).unwrap()
+									.flush().unwrap();
+								std::process::exit(0);
+							}
+							motion_buf.clear();
 						}
-						else {
-							motion_buf.push('q');
+						Esc => {
+							motion_buf.clear();
 						}
+						_ => {}
 					}
-					Esc => {
-						motion_buf.clear();
-					}
-					_ => {}
 				}
 			}
 			_ => {}
